@@ -15,7 +15,7 @@
     <div id="canvas1-container" style="position: relative">
       <img
         ref="backgroundImage"
-        :src="config.bgUrl"
+        v-show="config.bgUrl"
         alt="backgroundImg"
         :class="{ 'fallback-img-ratio': !isCanvasRatio }"
       />
@@ -40,12 +40,18 @@
           :style="{
             position: 'absolute',
             top: `${
-              getTopRight(shape.coordinate, shape.lowestPosition).y +
-              config.additional.right.y
+              getTopRight(
+                shape.coordinate,
+                shape.lowestPosition,
+                shape.highestPosition
+              ).y + config.additional.right.y
             }px`,
             left: `${
-              getTopRight(shape.coordinate, shape.lowestPosition).x +
-              config.additional.right.x
+              getTopRight(
+                shape.coordinate,
+                shape.lowestPosition,
+                shape.highestPosition
+              ).x + config.additional.right.x
             }px`
           }"
         >
@@ -183,6 +189,13 @@ export default {
   mounted() {
     this.init()
   },
+  watch: {
+    config(value) {
+      if (value.bgUrl) {
+        this.init()
+      }
+    }
+  },
   methods: {
     init() {
       this.canvas = this.$refs.canvas1
@@ -198,6 +211,14 @@ export default {
           } else {
             this.canvas.width = this.image.width
             this.canvas.height = this.image.height
+            this.$emit('update:options', {
+              ...this.options,
+              canvas: {
+                ...this.options.canvas,
+                width: this.image.width,
+                height: this.image.height
+              }
+            })
           }
 
           if (this.data.length) {
@@ -289,6 +310,10 @@ export default {
       ctx.stroke()
     },
     finishingShape() {
+      if (!(this.tempCoords.length >= 3)) {
+        this.$emit('alert', 'Please create shapes first before finishing')
+        return
+      }
       if (this.confirmation()) {
         this.isFinished = true
         const generatedId = this.ids()
@@ -416,9 +441,16 @@ export default {
       const yDifference = y2 - y1
       return this.lowestPoint(coords, yDifference > 10 ? yIndex : index, 'x')
     },
-    getTopRight(coords, { y }) {
+    getTopRight(coords, { y }, { x }) {
+      const yLowest = this.lowestPoint(coords, y, 'y')
+      const yHighest = this.lowestPoint(coords, x, 'y')
+      const yDifference = yHighest - yLowest
+      const selectedIndex = yDifference < 10 ? x : y
       return {
-        x: coords[y].x1 > coords[y].x2 ? coords[y].x1 : coords[y].x2,
+        x:
+          coords[selectedIndex].x1 > coords[selectedIndex].x2
+            ? coords[selectedIndex].x1
+            : coords[selectedIndex].x2,
         y: this.lowestPoint(coords, y, 'y')
       }
     },
@@ -429,7 +461,7 @@ export default {
       }
     },
     getMiddle(coords, lowest, highest) {
-      const topRight = this.getTopRight(coords, lowest)
+      const topRight = this.getTopRight(coords, lowest, highest)
       const bottomRight = this.getBottomRight(coords, highest)
       const x1 = this.getX(coords, lowest)
       const x2 = topRight.x

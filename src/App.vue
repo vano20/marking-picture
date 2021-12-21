@@ -2,10 +2,11 @@
   <div id="app">
     <marking-picture
       ref="marker"
-      :options="config"
+      :options.sync="config"
       :confirmation="confirmation"
       :ids="ids"
       :data.sync="data"
+      @alert="somethingWrong"
     >
       <template #top="{ props }">
         <div style="background: white; padding: 5px; border-radius: 5px">
@@ -59,6 +60,7 @@
       </template>
     </marking-picture>
     <div>
+      <input type="file" @change="selectFile" />
       <button style="margin-right: 5px" @click="saveShape">Save shape</button>
       <button @click="undo">Undo</button>
     </div>
@@ -76,11 +78,11 @@ export default {
   data() {
     return {
       config: {
-        bgUrl: require('./assets/contoh toyota.png'),
+        // bgUrl: require('./assets/contoh toyota.png'),
         // 1264 521
         canvas: {
-          height: 521,
-          width: 1264
+          // height: 521,
+          // width: 1264
         },
         additional: {
           top: {
@@ -94,13 +96,38 @@ export default {
         }
         // 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGFya2luZyUyMGxvdHxlbnwwfHwwfHw%3D&w=1000&q=80'
       },
-      data: []
+      data: [],
+      posData: {
+        image: '',
+        imageSize: {
+          height: 0,
+          width: 0
+        },
+        groupId: null,
+        paramId: null,
+        pos: []
+      },
+      imageFile: null,
+      imageUrl: ''
     }
   },
   watch: {
     data(value) {
-      console.log(value)
-    }
+      this.posData.pos = value.map(coord => ({
+        ...coord,
+        process: []
+      }))
+    },
+    config(value) {
+      this.posData = {
+        ...this.posData,
+        imageSize: {
+          height: value.canvas.height,
+          width: value.canvas.width
+        }
+      }
+    },
+    imageFile() {}
   },
   methods: {
     confirmation() {
@@ -114,6 +141,25 @@ export default {
     },
     undo() {
       this.$refs.marker.undo()
+    },
+    somethingWrong(message) {
+      alert(message)
+    },
+    selectFile(e) {
+      this.imageUrl = this.createDataURL(e.target.files[0])
+      this.config = {
+        ...this.config,
+        bgUrl: this.imageUrl
+      }
+      this.posData = {
+        ...this.posData,
+        image: this.imageUrl
+      }
+    },
+    createDataURL(file) {
+      if (!(file instanceof Blob)) return ''
+      const urlCreator = window.URL || window.webkitURL
+      return urlCreator.createObjectURL(file)
     }
   }
 }
