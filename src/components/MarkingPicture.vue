@@ -1,7 +1,7 @@
 <template>
   <div
     :style="{
-      '--bgContainer': config.bgUrl ? `url('${config.bgUrl}')` : config.bgColor
+      minHeight: `${config.canvas.height + 80}px`
     }"
   >
     <ol>
@@ -19,7 +19,8 @@
         alt="backgroundImg"
         :class="{ 'fallback-img-ratio': !isCanvasRatio }"
       />
-      <canvas ref="canvas1" stlye="position: absolute;"> </canvas>
+      <canvas ref="canvas1" v-show="config.bgUrl" style="position: absolute">
+      </canvas>
       <div v-for="(shape, index) in shapes" :key="index">
         <div
           :style="{
@@ -31,7 +32,8 @@
             left: `${
               getX(shape.coordinate, shape.lowestPosition) +
               config.additional.top.x
-            }px`
+            }px`,
+            zIndex: 3
           }"
         >
           <slot name="top" :props="shape"> </slot>
@@ -52,7 +54,8 @@
                 shape.lowestPosition,
                 shape.highestPosition
               ).x + config.additional.right.x
-            }px`
+            }px`,
+            zIndex: 3
           }"
         >
           <slot name="top-right" :props="shape"> </slot>
@@ -66,7 +69,8 @@
             left: `${
               getBottomRight(shape.coordinate, shape.highestPosition).x
             }px`,
-            transform: 'translate(-70%, -70%)'
+            transform: 'translate(-70%, -70%)',
+            zIndex: 3
           }"
         >
           <slot name="bottom-right" :props="shape"> x </slot>
@@ -88,7 +92,8 @@
                 shape.lowestPosition,
                 shape.highestPosition
               ).x
-            }px`
+            }px`,
+            zIndex: 3
           }"
         >
           <slot name="middle" :props="shape"> </slot>
@@ -487,8 +492,11 @@ export default {
   // background-repeat: no-repeat;
   height: 100%;
   width: 100%;
+  canvas {
+    z-index: 2;
+  }
   img {
-    z-index: -1;
+    z-index: 1;
     position: absolute;
   }
 }
