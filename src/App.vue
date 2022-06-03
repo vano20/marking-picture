@@ -1,67 +1,88 @@
 <template>
   <div id="app">
-    <marking-picture
-      ref="marker"
-      :options.sync="config"
-      :confirmation="confirmation"
-      :ids="ids"
-      :data.sync="data"
-      @alert="somethingWrong"
-    >
-      <template #top="{ props }">
-        <div style="background: white; padding: 5px; border-radius: 5px">
-          {{ props.name }}
-        </div>
-      </template>
-      <template #middle="{ props }">
-        <div
-          style="
-            background: white;
-            border-radius: 50px;
-            height: 50px;
-            width: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          "
-        >
-          {{ props.name }}
-        </div>
-      </template>
-      <template #top-right>
-        <div v-for="lamp in ['red', 'green', 'yellow', 'orange']" :key="lamp">
+    <div>
+      <marking-picture
+        ref="marker"
+        :options.sync="config"
+        :confirmation="confirmation"
+        :ids="ids"
+        :data.sync="data"
+        @alert="somethingWrong"
+      >
+        <template #top="{ props }">
           <div
-            :style="{
-              background: lamp,
-              padding: '8px',
-              'border-radius': '8px',
-              color: 'black',
-              'margin-bottom': '4px'
-            }"
-          ></div>
-        </div>
-      </template>
-      <template #bottom-right>
-        <div
-          style="
-            color: white;
-            background: black;
-            height: 25px;
-            width: 25px;
-            border-radius: 25px;
-            text-align: center;
-            vertical-align: middle;
-            line-height: 1.5;
-            cursor: pointer;
-          "
-        >
-          x
-        </div>
-      </template>
-    </marking-picture>
+            style="
+              background: white;
+              padding: 5px;
+              border-radius: 5px;
+            "
+          >
+            {{ props.name }}
+          </div>
+        </template>
+        <template #middle="{ props }">
+          <div
+            style="
+              background: white;
+              border-radius: 50px;
+              height: 50px;
+              width: 50px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            "
+          >
+            {{ props.name }}
+          </div>
+        </template>
+        <template #top-right>
+          <div
+            v-for="lamp in [
+              'red',
+              'green',
+              'yellow',
+              'orange'
+            ]"
+            :key="lamp"
+          >
+            <div
+              :style="{
+                background: lamp,
+                padding: '8px',
+                'border-radius': '8px',
+                color: 'black',
+                'margin-bottom': '4px'
+              }"
+            ></div>
+          </div>
+        </template>
+        <template #bottom-right>
+          <div
+            style="
+              color: white;
+              background: black;
+              height: 25px;
+              width: 25px;
+              border-radius: 25px;
+              text-align: center;
+              vertical-align: middle;
+              line-height: 1.5;
+              cursor: pointer;
+            "
+          >
+            x
+          </div>
+        </template>
+      </marking-picture>
+    </div>
     <div>
       <input type="file" @change="selectFile" />
-      <button style="margin-right: 5px" @click="saveShape">Save shape</button>
+      <button
+        style="margin-right: 5px"
+        @click="saveShape"
+      >
+        Save shape
+      </button>
       <button @click="undo">Undo</button>
     </div>
   </div>
@@ -146,7 +167,15 @@ export default {
       alert(message)
     },
     selectFile(e) {
-      this.imageUrl = this.createDataURL(e.target.files[0])
+      // this.imageUrl = this.createDataURL(e.target.files[0])
+      this.imageUrl = ''
+      const reader = new FileReader()
+      reader.onload = e => {
+        if (e.loaded <= 5000000) {
+          console.log(e.target.result)
+        }
+      }
+      reader.readAsDataURL(e.target.files[0])
       this.config = {
         ...this.config,
         bgUrl: this.imageUrl
@@ -158,7 +187,8 @@ export default {
     },
     createDataURL(file) {
       if (!(file instanceof Blob)) return ''
-      const urlCreator = window.URL || window.webkitURL
+      const urlCreator =
+        window.URL || window.webkitURL
       return urlCreator.createObjectURL(file)
     }
   }
@@ -167,7 +197,8 @@ export default {
 
 <style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Avenir, Helvetica, Arial,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: start;
